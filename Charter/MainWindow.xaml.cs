@@ -175,8 +175,8 @@ namespace Charter
                 circle = new Ellipse();
                 Canvas.SetLeft(circle, coordX);
                 Canvas.SetTop(circle, coordY);
-                circle.Width = 0;
-                circle.Height = 0;
+                circle.Width = 5;
+                circle.Height = 5;
                 if (circleDrawMode == "radius")
                 {
                     Canvas.SetLeft(circle, coordX);
@@ -185,6 +185,25 @@ namespace Charter
                     circle.Height = 0;
                 }
                 circle.Stroke = System.Windows.Media.Brushes.Black;
+                int lineTypeIndex = lineTypeBox.SelectedIndex;
+                if (lineTypeIndex == 1)
+                {
+                    circle.Stroke = System.Windows.Media.Brushes.LightGray;
+                    circle.StrokeDashArray = new DoubleCollection(
+                        new double[] {
+                            10
+                        }
+                    );
+                }
+                else if (lineTypeIndex == 2)
+                {
+                    circle.Stroke = System.Windows.Media.Brushes.AliceBlue;
+                    circle.StrokeDashArray = new DoubleCollection(
+                        new double[] {
+                            2
+                        }
+                    );
+                }
                 chart.Children.Add(circle);
                 lastCircleCoord = coordX;
                 initialCircleCoordX = coordX;
@@ -207,9 +226,9 @@ namespace Charter
             bool isLineExists = line != null;
             bool isCircleExists = circle != null;
             bool isCircleMove = isCircleSelectedTool && isCircleExists;
-            if (isLineExists)
+            if (isLineSelectedTool)
             {
-                if (isLineSelectedTool)
+                if (isLineExists)
                 {
                     if (isMouseBtnPressed)
                     {
@@ -220,7 +239,10 @@ namespace Charter
                         line.Y2 = coordY;
                     }
                 }
-                else if (isHorizontalMeasureSelectedTool)
+            }
+            else if (isHorizontalMeasureSelectedTool)
+            {
+                if (isLineExists)
                 {
                     bool isMeasureLeftExists = measureLeft != null;
                     bool isMeasureRightExists = measureRight != null;
@@ -251,7 +273,10 @@ namespace Charter
 
                     }
                 }
-                else if (isVerticalMeasureSelectedTool)
+            }
+            else if (isVerticalMeasureSelectedTool)
+            {
+                if (isLineExists)
                 {
                     bool isMeasureLeftExists = measureLeft != null;
                     bool isMeasureRightExists = measureRight != null;
@@ -279,7 +304,10 @@ namespace Charter
                         measureRight.X2 = coordX;
                     }
                 }
-                else if (isHorizontalDirectionSelectedTool)
+            }
+            else if (isHorizontalDirectionSelectedTool)
+            {
+                if (isLineExists)
                 {
                     if (isMouseBtnPressed)
                     {
@@ -289,15 +317,15 @@ namespace Charter
                         line.Y2 = coordY;
                     }
                 }
-                else if (isVerticalDirectionSelectedTool)
+            }
+            else if (isVerticalDirectionSelectedTool)
+            {
+                if (isMouseBtnPressed)
                 {
-                    if (isMouseBtnPressed)
-                    {
-                        Point currentPosition = e.GetPosition(chart);
-                        double coordX = currentPosition.X;
-                        line.X1 = coordX;
-                        line.X2 = coordX;
-                    }
+                    Point currentPosition = e.GetPosition(chart);
+                    double coordX = currentPosition.X;
+                    line.X1 = coordX;
+                    line.X2 = coordX;
                 }
             }
             else if (isCircleMove)
@@ -307,7 +335,7 @@ namespace Charter
                     Point currentPosition = e.GetPosition(chart);
                     double coordX = currentPosition.X;
                     double coordY = currentPosition.Y;
-                    double ratio = 0;
+                    double ratio = 1;
                     bool isCoordLT = lastCircleCoord < coordX;
                     bool isCoordGT = lastCircleCoord > coordX;
                     if (isCoordLT)
@@ -433,8 +461,20 @@ namespace Charter
                         {
                             measure *= -1;
                         }
+                        int selectedMeasureIndex = measureBox.SelectedIndex;
+                        string selectedMeasure = "мм";
+                        if (selectedMeasureIndex == 1)
+                        {
+                            measure /= 100;
+                            selectedMeasure = "cм";
+                        }
+                        else if (selectedMeasureIndex == 2)
+                        {
+                            measure /= 1000;
+                            selectedMeasure = "дм";
+                        }
                         string rawRoundedMeasure = measure.ToString("0.00");
-                        string measureLabelContent = rawRoundedMeasure + " мм";
+                        string measureLabelContent = rawRoundedMeasure + " " + selectedMeasure;
                         measureLabel.Text = measureLabelContent;
                     }
                 }
@@ -499,9 +539,20 @@ namespace Charter
                         {
                             measure *= -1;
                         }
-                        // double roundedMeasure = Math.Round(measure, 2, MidpointRounding.AwayFromZero);
+                        int selectedMeasureIndex = measureBox.SelectedIndex;
+                        string selectedMeasure = "мм";
+                        if (selectedMeasureIndex == 1)
+                        {
+                            measure /= 100;
+                            selectedMeasure = "cм";
+                        }
+                        else if (selectedMeasureIndex == 2)
+                        {
+                            measure /= 1000;
+                            selectedMeasure = "дм";
+                        }
                         string rawRoundedMeasure = measure.ToString("0.00");
-                        string measureLabelContent = rawRoundedMeasure + " мм";
+                        string measureLabelContent = rawRoundedMeasure + " " + selectedMeasure;
                         measureLabel.Text = measureLabelContent;
                     }
                 }

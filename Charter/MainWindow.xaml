@@ -82,6 +82,22 @@
                     Content="Сечение"
                 />
             </ComboBox>
+            <ComboBox
+                x:Name="measureBox"
+                Margin="5 0"
+                Width="75"
+                SelectedIndex="0"
+            >
+                <ComboBoxItem
+                    Content="мм"    
+                />
+                <ComboBoxItem
+                    Content="см"
+                />
+                <ComboBoxItem
+                    Content="дм"
+                />
+            </ComboBox>
         </StackPanel>
         <StackPanel
             DockPanel.Dock="Bottom"
@@ -106,6 +122,7 @@
             </StackPanel>
         </StackPanel>
         <DockPanel
+            Cursor="Pen"
             Background="Red"
             MouseDown="ChartPenDownHandler"
             MouseMove="WorkspaceHoverHandler"
