@@ -98,6 +98,21 @@
                     Content="дм"
                 />
             </ComboBox>
+            <Canvas
+                x:Name="lineWidthWrap"
+                MouseMove="UpdateLineWidthHandler"
+                Width="25"
+                Height="25"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+            >
+                <Ellipse
+                    x:Name="lineWidthControl"
+                    Width="25"
+                    Height="25"
+                    Fill="Black"
+                />
+            </Canvas>
         </StackPanel>
         <StackPanel
             DockPanel.Dock="Bottom"

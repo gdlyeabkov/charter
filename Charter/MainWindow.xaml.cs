@@ -14,6 +14,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using System.Speech.Synthesis;
+
 namespace Charter
 {
     /// <summary>
@@ -37,7 +39,10 @@ namespace Charter
         public double lastCircleCoord = 0;
         public double initialCircleCoordX = 0;
         public double initialCircleCoordY = 0;
-        
+        public double lastLineWidthCoord = 0;
+        public SpeechSynthesizer debugger;
+        public double lineThickness = 1;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -50,6 +55,7 @@ namespace Charter
         {
             measureLeftStartPosition = new Point();
             measureRightStartPosition = new Point();
+            debugger = new SpeechSynthesizer();
         }
 
         private void WorkspaceHoverHandler(object sender, MouseEventArgs e)
@@ -88,6 +94,7 @@ namespace Charter
                 line.X2 = coordX;
                 line.Y2 = coordY;
                 line.Stroke = System.Windows.Media.Brushes.LightGray;
+                line.StrokeThickness = lineThickness;
                 chart.Children.Add(line);
             }
             else if (isHorizontalMeasureSelectedTool)
@@ -185,6 +192,7 @@ namespace Charter
                     circle.Height = 0;
                 }
                 circle.Stroke = System.Windows.Media.Brushes.Black;
+                circle.StrokeThickness = lineThickness;
                 int lineTypeIndex = lineTypeBox.SelectedIndex;
                 if (lineTypeIndex == 1)
                 {
@@ -628,6 +636,41 @@ namespace Charter
         {
             circleDrawMode = "diameter";
             circleDrawModeIcon.Kind = PackIconKind.Diameter;
+        }
+
+        private void UpdateLineWidthHandler(object sender, MouseEventArgs e)
+        {
+            UpdateLineWidth(e);
+        }
+
+        public void UpdateLineWidth(MouseEventArgs e)
+        {
+            MouseButtonState mousePressed = MouseButtonState.Pressed;
+            MouseButtonState leftMouseButtonState = e.LeftButton;
+            bool isMousePressed = leftMouseButtonState == mousePressed;
+            if (isMousePressed)
+            {
+                double lineWidthControlWidth = lineWidthControl.Width;
+                int rawLineWidthControlWidth = ((int)(lineWidthControlWidth));
+                Point currentPosition = e.GetPosition(lineWidthWrap);
+                double coordX = currentPosition.X;
+                int ratio = 0;
+                if (lastLineWidthCoord > coordX)
+                {
+                   ratio = -1;
+                }
+                else if (lastLineWidthCoord < coordX)
+                {
+                    ratio = 1;
+                }
+                lineWidthControl.Width += ratio;
+                lineWidthControl.Height += ratio;
+                lastLineWidthCoord = coordX;
+                lineThickness = lineWidthControl.Width / 10;
+                Canvas.SetLeft(lineWidthControl, lineWidthWrap.Width / 2 - lineWidthControl.Width / 2);
+                Canvas.SetTop(lineWidthControl, lineWidthWrap.Height / 2 - lineWidthControl.Height / 2);
+
+            }
         }
 
     }
