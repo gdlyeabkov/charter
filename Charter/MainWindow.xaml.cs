@@ -42,6 +42,10 @@ namespace Charter
         public double lastLineWidthCoord = 0;
         public SpeechSynthesizer debugger;
         public double lineThickness = 1;
+        public double lineDelta = 0;
+        bool isStartCornerStep = true;
+        public PolyBezierSegment corner;
+        public Path curve;
 
         public MainWindow()
         {
@@ -243,8 +247,27 @@ namespace Charter
                         Point currentPosition = e.GetPosition(chart);
                         double coordX = currentPosition.X;
                         double coordY = currentPosition.Y;
-                        line.X2 = coordX;
-                        line.Y2 = coordY;
+                        var shiftModifier = Keyboard.Modifiers & ModifierKeys.Shift;
+                        bool isShiftModifierEnabled = shiftModifier > 0;
+                        if (isShiftModifierEnabled)
+                        {
+                            if (lineDelta != coordX)
+                            {
+                                line.X2 = coordX;
+                                line.Y2 = line.Y1;
+                            }
+                            else
+                            {
+                                line.X2 = line.X1;
+                                line.Y2 = coordY;
+                            }
+                        }
+                        else
+                        {
+                            line.X2 = coordX;
+                            line.Y2 = coordY;
+                        }
+                        lineDelta = coordX;
                     }
                 }
             }
@@ -386,10 +409,11 @@ namespace Charter
             bool isVerticalMeasureSelectedTool = selectedToolIndex == 2;
             bool isHorizontalDirectionSelectedTool = selectedToolIndex == 3;
             bool isVerticalDirectionSelectedTool = selectedToolIndex == 4;
+            bool isCornerSelectedTool = selectedToolIndex == 6;
             bool isLineExists = line != null;
-            if (isLineExists)
+            if (isLineSelectedTool)
             {
-                if (isLineSelectedTool)
+                if (isLineExists)
                 {
                     int lineTypeIndex = lineTypeBox.SelectedIndex;
                     line.Stroke = System.Windows.Media.Brushes.Black;
@@ -398,7 +422,7 @@ namespace Charter
                         line.Stroke = System.Windows.Media.Brushes.LightGray;
                         line.StrokeDashArray = new DoubleCollection(
                             new double[] {
-                                10
+                                    10
                             }
                         );
                     }
@@ -407,12 +431,15 @@ namespace Charter
                         line.Stroke = System.Windows.Media.Brushes.AliceBlue;
                         line.StrokeDashArray = new DoubleCollection(
                             new double[] {
-                                2
+                                    2
                             }
                         );
                     }
                 }
-                else if (isHorizontalMeasureSelectedTool)
+            }
+            else if (isHorizontalMeasureSelectedTool)
+            {
+                if (isLineExists)
                 {
                     isChartSelected = !isChartSelected;
                     if (isChartSelected)
@@ -486,7 +513,10 @@ namespace Charter
                         measureLabel.Text = measureLabelContent;
                     }
                 }
-                else if (isVerticalMeasureSelectedTool)
+            }
+            else if (isVerticalMeasureSelectedTool)
+            {
+                if (isLineExists)
                 {
                     isChartSelected = !isChartSelected;
                     if (isChartSelected)
@@ -495,7 +525,7 @@ namespace Charter
                         Point currentPosition = e.GetPosition(chart);
                         double coordX = currentPosition.X;
                         double coordY = currentPosition.Y;
-                    
+
                         measureLeft.X1 = measureLeftStartPosition.X;
                         measureLeft.Y1 = measureLeftStartPosition.Y;
                         measureLeft.X2 = coordX;
@@ -564,7 +594,10 @@ namespace Charter
                         measureLabel.Text = measureLabelContent;
                     }
                 }
-                else if (isHorizontalDirectionSelectedTool)
+            }
+            else if (isHorizontalDirectionSelectedTool)
+            {
+                if (isLineExists)
                 {
                     int lineTypeIndex = lineTypeBox.SelectedIndex;
                     line.Stroke = System.Windows.Media.Brushes.LightGray;
@@ -574,7 +607,10 @@ namespace Charter
                         }
                     );
                 }
-                else if (isVerticalDirectionSelectedTool)
+            }
+            else if (isVerticalDirectionSelectedTool)
+            {
+                if (isLineExists)
                 {
                     int lineTypeIndex = lineTypeBox.SelectedIndex;
                     line.Stroke = System.Windows.Media.Brushes.LightGray;
@@ -584,6 +620,72 @@ namespace Charter
                         }
                     );
                 }
+            }
+            else if (isCornerSelectedTool)
+            {
+                Point currentPosition = e.GetPosition(chart);
+                double coordX = currentPosition.X;
+                double coordY = currentPosition.Y;
+                if (isStartCornerStep)
+                {
+                    System.Windows.Shapes.Path penCurve = new System.Windows.Shapes.Path();
+                    Brush foreGroundColor = Brushes.Black;
+                    penCurve.Stroke = foreGroundColor;
+                    double brushSizePts = 1;
+                    penCurve.StrokeThickness = brushSizePts;
+                    PathGeometry pathGeometry = new PathGeometry();
+                    PathFigureCollection pathFigureCollection = new PathFigureCollection();
+                    PathFigure pathFigure = new PathFigure();
+                    PathSegmentCollection pathSegmentCollection = new PathSegmentCollection();
+                    pathFigure.Segments = pathSegmentCollection;
+                    pathFigure.StartPoint = new Point(coordX, coordY);
+                    pathFigureCollection.Add(pathFigure);
+                    pathGeometry.Figures = pathFigureCollection;
+                    penCurve.Data = pathGeometry;
+                    corner = new PolyBezierSegment();
+                    corner.Points.Add(new Point(coordX, coordY));
+                    corner.IsSmoothJoin = true;
+                    PathSegment pathSegment = corner;
+                    pathSegmentCollection.Add(pathSegment);
+                    penCurve.StrokeDashArray = new DoubleCollection(
+                        new double[] {
+                            10
+                        }
+                    );
+                    penCurve.Stroke = System.Windows.Media.Brushes.LightGray;
+                    chart.Children.Add(penCurve);
+                }
+                else
+                {
+                    Point currentPoint = new Point(coordX, coordY);
+                    double diffX = corner.Points[0].X - currentPoint.X;
+                    double diffY = corner.Points[0].Y - currentPoint.Y;
+                    double middlePointX = coordX + diffX / 2;
+                    double middlePointY = coordY - diffY / 2;
+                    corner.Points.Add(new Point(middlePointX, middlePointY));
+                    corner.Points.Add(currentPoint);
+
+                    double xDiff = currentPoint.X - corner.Points[0].X;
+                    double yDiff = currentPoint.Y - corner.Points[0].Y;
+                    double measure = Math.Atan2(yDiff, xDiff) * 180.0 / Math.PI;
+
+                    TextBlock measureLabel = new TextBlock();
+                    chart.Children.Add(measureLabel);
+                    Canvas.SetLeft(measureLabel, middlePointX);
+                    double verticalOffset = 20;
+                    Canvas.SetTop(measureLabel, middlePointY - verticalOffset);
+                    bool isMeasureNegative = measure < 0;
+                    if (isMeasureNegative)
+                    {
+                        measure *= -1;
+                    }
+                    string selectedMeasure = "°";
+                    string rawRoundedMeasure = measure.ToString("0.00");
+                    string measureLabelContent = rawRoundedMeasure + " " + selectedMeasure;
+                    measureLabel.Text = measureLabelContent;
+
+                }
+                isStartCornerStep = !isStartCornerStep;
             }
         }
 
@@ -669,6 +771,17 @@ namespace Charter
                 lineThickness = lineWidthControl.Width / 10;
                 Canvas.SetLeft(lineWidthControl, lineWidthWrap.Width / 2 - lineWidthControl.Width / 2);
                 Canvas.SetTop(lineWidthControl, lineWidthWrap.Height / 2 - lineWidthControl.Height / 2);
+
+            }
+        }
+
+        private void GlobalHotKeyHandler(object sender, KeyEventArgs e)
+        {
+            Key currentKey = e.Key;
+            var shiftModifier = Keyboard.Modifiers & ModifierKeys.Shift;
+            bool isShiftModifierEnabled = shiftModifier > 0;
+            if (isShiftModifierEnabled)
+            {
 
             }
         }

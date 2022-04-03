@@ -10,6 +10,7 @@
         Height="450"
         Width="800"
         WindowState="Maximized"
+        KeyUp="GlobalHotKeyHandler"
     >
     <DockPanel>
         <Menu
@@ -47,6 +48,9 @@
                 />
                 <ComboBoxItem
                     Content="Окружность"
+                />
+                <ComboBoxItem
+                    Content="Указать угол"
                 />
             </ComboBox>
             <ComboBox
